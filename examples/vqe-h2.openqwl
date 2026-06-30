@@ -1,0 +1,45 @@
+openqwl: "0.1"
+
+metadata:
+  id: vqe-h2
+  name: Ground State Energy of H2
+  version: "1.0"
+
+problem:
+  domain: chemistry
+  type: ground_state
+  formal_model: Hamiltonian
+
+imports:
+
+  molecule:
+    format: xyz
+    path: data/h2.xyz
+
+workflow:
+
+  nodes:
+
+    - id: build_hamiltonian
+      uses: openqwl://stdlib/chemistry/electronic_structure
+
+    - id: ansatz
+      uses: openqwl://stdlib/chemistry/uccsd
+
+    - id: vqe
+      uses: openqwl://stdlib/chemistry/vqe
+      parameters:
+        optimizer: COBYLA
+        maxiter: 100
+
+  edges:
+
+    - from: build_hamiltonian
+      to: vqe
+      output: hamiltonian
+      input: hamiltonian
+
+    - from: ansatz
+      to: vqe
+      output: ansatz
+      input: ansatz

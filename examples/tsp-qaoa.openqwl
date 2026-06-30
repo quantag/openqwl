@@ -1,0 +1,45 @@
+openqwl: "0.1"
+
+metadata:
+  id: tsp-qaoa
+  name: Traveling Salesman using QAOA
+  version: "1.0"
+
+problem:
+  domain: optimization
+  type: tsp
+  complexity: NP-hard
+  formal_model: QUBO
+
+imports:
+
+  cities:
+    format: csv
+    path: data/cities.csv
+
+workflow:
+
+  nodes:
+
+    - id: tsp_to_qubo
+      uses: openqwl://stdlib/optimization/tsp/to_qubo
+
+    - id: qaoa
+      uses: openqwl://stdlib/optimization/qaoa
+      parameters:
+        p: 3
+
+    - id: decode
+      uses: openqwl://stdlib/optimization/tsp/decode
+
+  edges:
+
+    - from: tsp_to_qubo
+      to: qaoa
+      output: qubo
+      input: qubo
+
+    - from: qaoa
+      to: decode
+      output: solution
+      input: solution

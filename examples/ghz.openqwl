@@ -1,0 +1,40 @@
+openqwl: "0.1"
+
+metadata:
+  id: ghz-state
+  name: GHZ State Preparation
+  version: "1.0"
+  author: Quantag IT Solutions GmbH
+  license: Apache-2.0
+
+problem:
+  domain: circuits
+  type: ghz_state
+  formal_model: quantum_circuit
+
+workflow:
+  nodes:
+    - id: create_ghz
+      uses: openqwl://stdlib/circuits/ghz
+      outputs:
+        circuit: ghz
+      parameters:
+        qubits: 3
+
+    - id: export_qasm
+      uses: openqwl://stdlib/export/qasm
+      inputs:
+        circuit: ghz
+      outputs:
+        file: qasm
+
+  edges:
+    - from: create_ghz
+      to: export_qasm
+      output: circuit
+      input: circuit
+
+exports:
+  qasm:
+    format: openqasm3
+    path: output/ghz.qasm

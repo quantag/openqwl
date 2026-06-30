@@ -1,0 +1,41 @@
+openqwl: "0.1"
+
+metadata:
+  id: grover-search
+  name: Grover Search
+  version: "1.0"
+
+problem:
+  domain: search
+  type: grover
+  complexity: O(sqrt(N))
+
+workflow:
+  nodes:
+
+    - id: oracle
+      uses: openqwl://stdlib/search/oracle
+
+    - id: diffuser
+      uses: openqwl://stdlib/search/diffuser
+
+    - id: grover
+      uses: openqwl://stdlib/search/grover
+      inputs:
+        oracle: oracle
+        diffuser: diffuser
+      outputs:
+        circuit: circuit
+      parameters:
+        iterations: auto
+
+  edges:
+    - from: oracle
+      to: grover
+      output: oracle
+      input: oracle
+
+    - from: diffuser
+      to: grover
+      output: diffuser
+      input: diffuser

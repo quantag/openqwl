@@ -1,0 +1,67 @@
+openqwl: "0.1"
+
+metadata:
+  id: maxcut-qaoa
+  name: MaxCut using QAOA
+  version: "1.0"
+
+problem:
+  domain: optimization
+  type: maxcut
+  complexity: NP-hard
+  formal_model: QUBO
+
+imports:
+
+  graph:
+    format: edge_list
+    path: data/graph.csv
+
+workflow:
+
+  nodes:
+
+    - id: qubo
+      uses: openqwl://stdlib/optimization/maxcut/to_qubo
+      outputs:
+        qubo: Q
+
+    - id: ising
+      uses: openqwl://stdlib/optimization/qubo/to_ising
+      inputs:
+        qubo: Q
+      outputs:
+        hamiltonian: H
+
+    - id: qaoa
+      uses: openqwl://stdlib/optimization/qaoa
+      inputs:
+        hamiltonian: H
+      outputs:
+        circuit: C
+      parameters:
+        p: 2
+
+    - id: execute
+      uses: openqwl://runtime/qiskit
+      inputs:
+        circuit: C
+      outputs:
+        counts: counts
+
+  edges:
+
+    - from: qubo
+      to: ising
+      output: qubo
+      input: qubo
+
+    - from: ising
+      to: qaoa
+      output: hamiltonian
+      input: hamiltonian
+
+    - from: qaoa
+      to: execute
+      output: circuit
+      input: circuit
