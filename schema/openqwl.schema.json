@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openqwl.org/schema/openqwl-0.1.schema.json",
+  "title": "OpenQWL 0.1",
+  "description": "Open Quantum Workflow Language",
+  "type": "object",
+
+  "required": [
+    "openqwl",
+    "metadata",
+    "workflow"
+  ],
+
+  "properties": {
+
+    "openqwl": {
+      "type": "string",
+      "const": "0.1"
+    },
+
+    "metadata": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+
+        "id": {
+          "type": "string"
+        },
+
+        "name": {
+          "type": "string"
+        },
+
+        "version": {
+          "type": "string"
+        },
+
+        "author": {
+          "type": "string"
+        },
+
+        "description": {
+          "type": "string"
+        },
+
+        "license": {
+          "type": "string"
+        }
+
+      },
+      "additionalProperties": true
+    },
+
+    "problem": {
+      "type": "object",
+      "properties": {
+
+        "domain": {
+          "type": "string"
+        },
+
+        "type": {
+          "type": "string"
+        },
+
+        "complexity": {
+          "type": "string"
+        },
+
+        "formal_model": {
+          "type": "string"
+        }
+
+      },
+      "additionalProperties": true
+    },
+
+    "imports": {
+      "type": "object",
+      "additionalProperties": true
+    },
+
+    "workflow": {
+
+      "type": "object",
+
+      "required": [
+        "nodes"
+      ],
+
+      "properties": {
+
+        "nodes": {
+
+          "type": "array",
+
+          "items": {
+
+            "type": "object",
+
+            "required": [
+              "id",
+              "uses"
+            ],
+
+            "properties": {
+
+              "id": {
+                "type": "string"
+              },
+
+              "uses": {
+                "type": "string"
+              },
+
+              "inputs": {
+                "type": "object"
+              },
+
+              "outputs": {
+                "type": "object"
+              },
+
+              "parameters": {
+                "type": "object"
+              }
+
+            },
+
+            "additionalProperties": true
+
+          }
+
+        },
+
+        "edges": {
+
+          "type": "array",
+
+          "items": {
+
+            "type": "object",
+
+            "required": [
+              "from",
+              "to"
+            ],
+
+            "properties": {
+
+              "from": {
+                "type": "string"
+              },
+
+              "to": {
+                "type": "string"
+              },
+
+              "output": {
+                "type": "string"
+              },
+
+              "input": {
+                "type": "string"
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+
+    },
+
+    "execution": {
+      "type": "object",
+      "additionalProperties": true
+    },
+
+    "exports": {
+      "type": "object",
+      "additionalProperties": true
+    },
+
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+
+  },
+
+  "additionalProperties": false
+
+}

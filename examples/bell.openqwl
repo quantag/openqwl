@@ -1,0 +1,57 @@
+openqwl: "0.1"
+
+metadata:
+  id: bell-state
+  name: Bell State Workflow
+  version: "1.0"
+  author: Quantag IT Solutions GmbH
+  description: Minimal OpenQWL workflow that imports or defines a Bell-state circuit and exports OpenQASM.
+  license: Apache-2.0
+
+problem:
+  domain: circuits
+  type: bell_state
+  complexity: trivial
+  formal_model: quantum_circuit
+
+imports: {}
+
+workflow:
+  nodes:
+    - id: create_bell_circuit
+      uses: stdlib.circuits.bell
+      outputs:
+        circuit: bell_circuit
+      parameters:
+        qubits: 2
+
+    - id: export_qasm
+      uses: runtime.export.qasm
+      inputs:
+        circuit: bell_circuit
+      outputs:
+        file: bell_qasm_file
+      parameters:
+        format: openqasm3
+        path: output/bell.qasm
+
+  edges:
+    - from: create_bell_circuit
+      to: export_qasm
+      output: circuit
+      input: circuit
+
+execution:
+  backend:
+    provider: local
+    target: qasm_exporter
+
+exports:
+  qasm:
+    format: openqasm3
+    path: output/bell.qasm
+
+metrics:
+  - qubit_count
+  - gate_count
+  - circuit_depth
