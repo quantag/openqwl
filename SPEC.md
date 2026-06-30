@@ -497,3 +497,93 @@ This specification is distributed under the Apache License 2.0.
 Copyright (c) 2026 Quantag IT Solutions GmbH.
 
 OpenQWL is a trademark of Quantag IT Solutions GmbH.
+
+# 20. File Format
+
+OpenQWL documents SHALL be encoded as UTF-8 text.
+
+The document syntax SHALL conform to YAML 1.2.
+
+OpenQWL documents SHOULD use the following file extension:
+
+```
+.openqwl
+```
+
+Examples:
+
+```
+bell.openqwl
+maxcut.openqwl
+portfolio.openqwl
+vqe_h2.openqwl
+```
+
+---
+
+# 21. Media Type
+
+The media type for OpenQWL documents is
+
+```
+application/openqwl
+```
+
+Future revisions MAY define structured syntax suffixes if required.
+
+OpenQWL documents SHOULD be transferred using the following MIME type:
+
+```
+Content-Type: application/openqwl
+```
+
+Examples
+
+HTTP
+
+```
+GET /examples/maxcut.openqwl HTTP/1.1
+Accept: application/openqwl
+```
+
+Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/openqwl
+```
+
+---
+
+# 22. Character Encoding
+
+OpenQWL documents SHALL use
+
+```
+UTF-8
+```
+
+Unicode is fully supported.
+
+---
+
+# 23. Line Endings
+
+Implementations SHOULD accept both
+
+- LF
+- CRLF
+
+---
+
+# 24. Comments
+
+Since OpenQWL is YAML-based, comments SHALL follow YAML syntax.
+
+Example
+
+```yaml
+# Build QUBO model
+- id: build_qubo
+  uses: stdlib.optimization.maxcut
+```
