@@ -587,3 +587,153 @@ Example
 - id: build_qubo
   uses: stdlib.optimization.maxcut
 ```
+
+# 25. URI Namespace
+
+OpenQWL defines the following canonical URI namespace.
+
+```
+openqwl://
+```
+
+All globally identifiable OpenQWL resources SHOULD use this namespace.
+
+The namespace is reserved by the OpenQWL specification.
+
+---
+
+## Standard Library
+
+The standard library SHALL use
+
+```
+openqwl://stdlib/
+```
+
+Examples
+
+```
+openqwl://stdlib/circuits/bell
+
+openqwl://stdlib/optimization/qaoa
+
+openqwl://stdlib/optimization/maxcut
+
+openqwl://stdlib/chemistry/vqe
+
+openqwl://stdlib/report/pdf
+```
+
+---
+
+## Runtime
+
+Execution runtimes SHALL use
+
+```
+openqwl://runtime/
+```
+
+Examples
+
+```
+openqwl://runtime/qiskit
+
+openqwl://runtime/pennylane
+
+openqwl://runtime/cirq
+
+openqwl://runtime/cudaq
+```
+
+---
+
+## Hardware
+
+Hardware providers SHALL use
+
+```
+openqwl://hardware/
+```
+
+Examples
+
+```
+openqwl://hardware/ibm/brisbane
+
+openqwl://hardware/ionq/aria
+
+openqwl://hardware/rigetti/ankaa
+
+openqwl://hardware/dwave/advantage
+```
+
+---
+
+## Community Packages
+
+Community packages SHOULD use
+
+```
+openqwl://community/
+```
+
+Examples
+
+```
+openqwl://community/example/my_optimizer
+
+openqwl://community/university/maxcut_extensions
+```
+
+---
+
+## Vendor Packages
+
+Commercial implementations SHOULD use
+
+```
+openqwl://vendor/
+```
+
+Examples
+
+```
+openqwl://vendor/ibm/error_mitigation
+
+openqwl://vendor/quantag/gem_optimizer
+```
+
+---
+
+## User Packages
+
+User-defined reusable components SHOULD use
+
+```
+openqwl://user/
+```
+
+Example
+
+```
+openqwl://user/my_company/my_pipeline
+```
+
+---
+
+## Resolution
+
+URI resolution is implementation dependent.
+
+Implementations MAY resolve resources
+
+- locally
+
+- from package registries
+
+- from Git repositories
+
+- from cloud registries
+
+OpenQWL itself does not define a package transport protocol.
