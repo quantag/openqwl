@@ -1,23 +1,39 @@
-OpenQWL
+# OpenQWL
 
-Open Quantum Workflow Language
+**Open Quantum Workflow Language**
 
-A vendor-neutral YAML language for describing complete quantum computing workflows.
+OpenQWL is an open, vendor-neutral YAML language for describing complete quantum computing workflows.
 
-OpenQWL describes:
+Unlike OpenQASM, which describes quantum circuits, OpenQWL describes the entire computational workflow, including:
 
-- data import
-- preprocessing
-- problem formulation
-- circuit generation
-- execution
-- benchmarking
-- reporting
+- Problem definition
+- Data import
+- Classical preprocessing
+- Formal model generation (QUBO, Ising, Hamiltonian, ...)
+- Quantum algorithm execution
+- Classical post-processing
+- Benchmarking
+- Reporting
 
-OpenQWL is independent of any SDK or hardware vendor.
+The goal of OpenQWL is to make quantum workflows portable, reproducible and independent of any particular SDK or hardware vendor.
 
-License
+## Principles
 
-Apache License 2.0
+- Human readable
+- YAML based
+- Vendor neutral
+- Reproducible
+- Extensible
+- Versioned
+- Open standard
 
-Copyright (c) 2026 Quantag IT Solutions GmbH
+## Example
+
+```yaml
+openqwl: "0.1"
+
+problem:
+  type: optimization.maxcut
+
+workflow:
+  - uses: stdlib.optimization.qaoa
