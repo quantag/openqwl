@@ -2,7 +2,7 @@
 
 **Open Quantum Workflow Language**
 
-OpenQWL is an open, vendor-neutral YAML-based language for describing complete quantum computing workflows.
+[OpenQWL](https://openqwl.org) is an open, vendor-neutral YAML-based language for describing complete quantum computing workflows.
 
 Unlike OpenQASM, which describes quantum circuits, OpenQWL describes the full computational workflow around a quantum experiment:
 
