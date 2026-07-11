@@ -1,2 +1,5 @@
 PyYAML>=6.0
-jsonschema>=4.0
+
+# Optional, auto-detected at runtime:
+# jsonschema>=4.0   -> enables full schema/openqwl.schema.json validation
+# qiskit>=1.0       -> enables the real OpenQASM3 export backend
