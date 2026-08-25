@@ -1,46 +1,43 @@
 openqwl: "0.1"
 
 metadata:
-  id: ghz-state
-  name: GHZ State Preparation
+  id: teleportation
+  name: Quantum Teleportation
   version: "1.0"
   author: Quantag IT Solutions GmbH
-  license: Apache-2.0
 
 problem:
   domain: circuits
-  type: ghz_state
+  type: teleportation
   formal_model: quantum_circuit
 
 workflow:
   nodes:
-    - id: create_ghz
-      uses: openqwl://stdlib/circuits/ghz
+    - id: create_teleport
+      uses: openqwl://stdlib/circuits/teleportation
       outputs:
-        circuit: ghz_circuit
-      parameters:
-        qubits: 3
+        circuit: teleport_circuit
 
     - id: export_qasm
       uses: openqwl://stdlib/export/qasm
       inputs:
-        circuit: ghz_circuit
+        circuit: teleport_circuit
       outputs:
         file: qasm_file
       parameters:
         format: openqasm3
-        path: output/ghz.qasm
+        path: output/teleportation.qasm
 
   edges:
-    - from: create_ghz
+    - from: create_teleport
       to: export_qasm
-      output: ghz_circuit
+      output: teleport_circuit
       input: circuit
 
 exports:
   qasm:
     format: openqasm3
-    path: output/ghz.qasm
+    path: output/teleportation.qasm
 
 metrics:
   - qubit_count

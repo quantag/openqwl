@@ -11,35 +11,51 @@ problem:
   formal_model: Hamiltonian
 
 imports:
-
   molecule:
     format: xyz
     path: data/h2.xyz
 
 workflow:
-
   nodes:
-
     - id: build_hamiltonian
       uses: openqwl://stdlib/chemistry/electronic_structure
+      outputs:
+        hamiltonian: H
 
     - id: ansatz
       uses: openqwl://stdlib/chemistry/uccsd
+      outputs:
+        ansatz: A
 
     - id: vqe
       uses: openqwl://stdlib/chemistry/vqe
+      inputs:
+        hamiltonian: H
+        ansatz: A
+      outputs:
+        circuit: C
+        energy: E
       parameters:
         optimizer: COBYLA
         maxiter: 100
 
   edges:
-
     - from: build_hamiltonian
       to: vqe
-      output: hamiltonian
+      output: H
       input: hamiltonian
 
     - from: ansatz
       to: vqe
-      output: ansatz
+      output: A
       input: ansatz
+
+exports:
+  results:
+    format: json
+    path: output/vqe_h2_results.json
+
+metrics:
+  - qubit_count
+  - gate_count
+  - circuit_depth
