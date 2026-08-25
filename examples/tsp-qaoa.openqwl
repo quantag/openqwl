@@ -12,34 +12,50 @@ problem:
   formal_model: QUBO
 
 imports:
-
   cities:
     format: csv
     path: data/cities.csv
 
 workflow:
-
   nodes:
-
     - id: tsp_to_qubo
       uses: openqwl://stdlib/optimization/tsp/to_qubo
+      outputs:
+        qubo: Q
 
     - id: qaoa
       uses: openqwl://stdlib/optimization/qaoa
+      inputs:
+        hamiltonian: Q
+      outputs:
+        circuit: C
       parameters:
         p: 3
 
     - id: decode
       uses: openqwl://stdlib/optimization/tsp/decode
+      inputs:
+        solution: C
+      outputs:
+        solution: final_route
 
   edges:
-
     - from: tsp_to_qubo
       to: qaoa
-      output: qubo
-      input: qubo
+      output: Q
+      input: hamiltonian
 
     - from: qaoa
       to: decode
-      output: solution
+      output: C
       input: solution
+
+exports:
+  route:
+    format: json
+    path: output/tsp_route.json
+
+metrics:
+  - qubit_count
+  - gate_count
+  - circuit_depth

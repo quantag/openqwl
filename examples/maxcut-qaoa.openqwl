@@ -12,15 +12,12 @@ problem:
   formal_model: QUBO
 
 imports:
-
   graph:
     format: edge_list
     path: data/graph.csv
 
 workflow:
-
   nodes:
-
     - id: qubo
       uses: openqwl://stdlib/optimization/maxcut/to_qubo
       outputs:
@@ -50,18 +47,27 @@ workflow:
         counts: counts
 
   edges:
-
     - from: qubo
       to: ising
-      output: qubo
+      output: Q
       input: qubo
 
     - from: ising
       to: qaoa
-      output: hamiltonian
+      output: H
       input: hamiltonian
 
     - from: qaoa
       to: execute
-      output: circuit
+      output: C
       input: circuit
+
+exports:
+  results:
+    format: json
+    path: output/maxcut_counts.json
+
+metrics:
+  - qubit_count
+  - gate_count
+  - circuit_depth

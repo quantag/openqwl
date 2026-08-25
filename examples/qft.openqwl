@@ -1,46 +1,45 @@
 openqwl: "0.1"
 
 metadata:
-  id: ghz-state
-  name: GHZ State Preparation
+  id: qft
+  name: Quantum Fourier Transform
   version: "1.0"
   author: Quantag IT Solutions GmbH
-  license: Apache-2.0
 
 problem:
   domain: circuits
-  type: ghz_state
+  type: qft
   formal_model: quantum_circuit
 
 workflow:
   nodes:
-    - id: create_ghz
-      uses: openqwl://stdlib/circuits/ghz
+    - id: create_qft
+      uses: openqwl://stdlib/circuits/qft
       outputs:
-        circuit: ghz_circuit
+        circuit: qft_circuit
       parameters:
-        qubits: 3
+        qubits: 4
 
     - id: export_qasm
       uses: openqwl://stdlib/export/qasm
       inputs:
-        circuit: ghz_circuit
+        circuit: qft_circuit
       outputs:
         file: qasm_file
       parameters:
         format: openqasm3
-        path: output/ghz.qasm
+        path: output/qft.qasm
 
   edges:
-    - from: create_ghz
+    - from: create_qft
       to: export_qasm
-      output: ghz_circuit
+      output: qft_circuit
       input: circuit
 
 exports:
   qasm:
     format: openqasm3
-    path: output/ghz.qasm
+    path: output/qft.qasm
 
 metrics:
   - qubit_count

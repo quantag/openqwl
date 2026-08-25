@@ -4,6 +4,8 @@ metadata:
   id: grover-search
   name: Grover Search
   version: "1.0"
+  author: Quantag IT Solutions GmbH
+  license: Apache-2.0
 
 problem:
   domain: search
@@ -15,9 +17,17 @@ workflow:
 
     - id: oracle
       uses: openqwl://stdlib/search/oracle
+      outputs:
+        oracle: oracle
+      parameters:
+        target: "101"
 
     - id: diffuser
       uses: openqwl://stdlib/search/diffuser
+      outputs:
+        diffuser: diffuser
+      parameters:
+        qubits: 3
 
     - id: grover
       uses: openqwl://stdlib/search/grover
@@ -29,6 +39,16 @@ workflow:
       parameters:
         iterations: auto
 
+    - id: export_qasm
+      uses: openqwl://stdlib/export/qasm
+      inputs:
+        circuit: circuit
+      outputs:
+        file: grover_qasm
+      parameters:
+        format: openqasm3
+        path: output/grover.qasm
+
   edges:
     - from: oracle
       to: grover
@@ -39,3 +59,18 @@ workflow:
       to: grover
       output: diffuser
       input: diffuser
+
+    - from: grover
+      to: export_qasm
+      output: circuit
+      input: circuit
+
+exports:
+  qasm:
+    format: openqasm3
+    path: output/grover.qasm
+
+metrics:
+  - qubit_count
+  - gate_count
+  - circuit_depth
