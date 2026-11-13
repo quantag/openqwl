@@ -1,0 +1,39 @@
+openqwl: "0.2"
+
+metadata:
+  id: teleportation-realtime
+  name: Quantum Teleportation with Real-Time Corrections
+  version: "1.0"
+  author: Quantag IT Solutions GmbH
+  description: >
+    The corrections depend on mid-circuit measurements while the target
+    qubit is still alive. That logic lives inside the kernel, and the
+    node asks for a backend with feed-forward.
+
+problem:
+  domain: circuits
+  type: teleportation
+  formal_model: quantum_circuit
+
+workflow:
+  nodes:
+    - id: teleport
+      uses: openqwl://core/kernel
+      kernel:
+        format: openqasm3
+        source: kernels/teleport.qasm
+      outputs:
+        counts: teleport_counts
+      parameters:
+        shots: 2048
+      constraints:
+        tier: realtime
+        requires:
+          - mid_circuit_measurement
+          - feed_forward
+
+execution:
+  tier: auto
+
+metrics:
+  - qubit_count

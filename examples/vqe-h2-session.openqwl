@@ -1,0 +1,124 @@
+openqwl: "0.2"
+
+metadata:
+  id: vqe-h2-session
+  name: Ground State Energy of H2 in One Session
+  version: "1.0"
+  author: Quantag IT Solutions GmbH
+  description: >
+    The VQE iteration is written as an explicit loop. Each estimate
+    depends on the previous update, so the loop asks to run in one
+    session on the device. Where sessions are unavailable, an
+    implementation may fall back to queued jobs and warn.
+
+problem:
+  domain: chemistry
+  type: ground_state
+  formal_model: Hamiltonian
+
+imports:
+  molecule:
+    format: xyz
+    path: data/h2.xyz
+
+workflow:
+  nodes:
+    - id: build_hamiltonian
+      uses: openqwl://stdlib/chemistry/electronic_structure
+      outputs:
+        hamiltonian: H
+
+    - id: ansatz
+      uses: openqwl://stdlib/chemistry/uccsd
+      outputs:
+        ansatz: A
+        initial_params: theta0
+
+    - id: vqe_loop
+      uses: openqwl://core/loop
+      inputs:
+        hamiltonian: H
+        ansatz: A
+        params: theta0
+      outputs:
+        energy: E
+        params: theta
+      parameters:
+        max_iterations: 200
+        until:
+          variable: delta
+          lt: 1.0e-6
+      constraints:
+        tier: session
+        target: qpu
+      body:
+        nodes:
+          - id: estimate
+            uses: openqwl://stdlib/chemistry/estimate_energy
+            inputs:
+              hamiltonian: hamiltonian
+              ansatz: ansatz
+              params: params
+            outputs:
+              energy: e_iter
+            parameters:
+              shots: 4096
+
+          - id: update
+            uses: openqwl://stdlib/optimization/optimizer_step
+            inputs:
+              params: params
+              energy: e_iter
+            outputs:
+              params: params_next
+              delta: delta
+            parameters:
+              method: SPSA
+
+        edges:
+          - from: estimate
+            to: update
+            output: energy
+            input: energy
+
+        carry:
+          params: params_next
+
+        results:
+          energy: e_iter
+          params: params_next
+
+  edges:
+    - from: build_hamiltonian
+      to: vqe_loop
+      output: hamiltonian
+      input: hamiltonian
+
+    - from: ansatz
+      to: vqe_loop
+      output: ansatz
+      input: ansatz
+
+    - from: ansatz
+      to: vqe_loop
+      output: initial_params
+      input: params
+
+execution:
+  tier: auto
+  targets:
+    - id: qpu
+      uses: openqwl://hardware/example/qpu_20q
+      access: auto
+    - id: local
+      uses: openqwl://hardware/local/simulator
+      access: simulator
+
+exports:
+  results:
+    format: json
+    path: output/vqe_h2_session_results.json
+
+metrics:
+  - qubit_count
+  - circuit_depth

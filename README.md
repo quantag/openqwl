@@ -175,7 +175,17 @@ openqwl/
 
 ## Status
 
-OpenQWL is currently in **Draft 0.1**.
+OpenQWL is currently in **Draft 0.2**.
+
+Draft 0.2 adds the constructs needed to run hybrid workflows at three speeds of quantum–classical interaction:
+
+| Tier | Typical use | How it is written |
+|---|---|---|
+| `queued` | single circuits, batches, sweeps | ordinary nodes |
+| `session` | variational loops next to the device | an `openqwl://core/loop` node with `tier: session` |
+| `realtime` | feed-forward on mid-circuit measurements | a `kernel` (OpenQASM 3 or QIR) with `tier: realtime` |
+
+It also adds `openqwl://core/group`, `execution.targets` with a selectable access path (`qdmi`, `qrmi`, `native`, `simulator`), and `constraints.requires`. Every Draft 0.1 document remains valid. See sections 14.1, 16.7 to 16.9 and 20 of [SPEC.md](SPEC.md), and the examples `vqe-h2-session.openqwl` and `teleportation-realtime.openqwl`.
 
 The current goal is to define:
 

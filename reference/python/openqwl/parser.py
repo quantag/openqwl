@@ -15,6 +15,8 @@ from typing import Any
 
 import yaml
 
+from .semantics import check_document
+
 
 class OpenQWLValidationError(Exception):
     """Raised when a .openqwl document is structurally invalid."""
@@ -30,6 +32,7 @@ class WorkflowDocument:
 
     raw: dict[str, Any]
     path: str
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def version(self) -> str:
@@ -71,8 +74,19 @@ def load_workflow(path: str) -> WorkflowDocument:
 
     _validate_structure(raw, path)
     _validate_with_schema_if_available(raw, path)
+    warnings = _validate_semantics(raw, path)
 
-    return WorkflowDocument(raw=raw, path=path)
+    return WorkflowDocument(raw=raw, path=path, warnings=warnings)
+
+
+def _validate_semantics(raw: dict[str, Any], path: str) -> list[str]:
+    """Draft 0.2 rules: composite nodes, kernels, tiers and targets."""
+    errors, warnings = check_document(raw)
+    if errors:
+        raise OpenQWLValidationError(
+            f"{path}: " + f"\n{path}: ".join(errors)
+        )
+    return warnings
 
 
 def _validate_structure(raw: dict[str, Any], path: str) -> None:
