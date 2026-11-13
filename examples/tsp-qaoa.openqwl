@@ -42,12 +42,12 @@ workflow:
   edges:
     - from: tsp_to_qubo
       to: qaoa
-      output: Q
+      output: qubo
       input: hamiltonian
 
     - from: qaoa
       to: decode
-      output: C
+      output: circuit
       input: solution
 
 exports:

@@ -42,12 +42,12 @@ workflow:
   edges:
     - from: build_hamiltonian
       to: vqe
-      output: H
+      output: hamiltonian
       input: hamiltonian
 
     - from: ansatz
       to: vqe
-      output: A
+      output: ansatz
       input: ansatz
 
 exports:

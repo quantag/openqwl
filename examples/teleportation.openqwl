@@ -31,7 +31,7 @@ workflow:
   edges:
     - from: create_teleport
       to: export_qasm
-      output: teleport_circuit
+      output: circuit
       input: circuit
 
 exports:
