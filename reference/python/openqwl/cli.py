@@ -54,6 +54,12 @@ def _run(path: str) -> int:
 
     print(f"\nExecuted nodes in order: {' -> '.join(result.node_order)}")
 
+    for node_path, count in result.iterations.items():
+        print(f"  {node_path}: {count} iteration(s)")
+
+    for warning in doc.warnings:
+        print(f"warning: {warning}", file=sys.stderr)
+
     if result.exported_files:
         print("\nExported files:")
         for f in result.exported_files:

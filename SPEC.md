@@ -389,19 +389,20 @@ Example:
           params: params
         outputs:
           energy: e_iter
+          gradient: g_iter
       - id: update
         uses: openqwl://stdlib/optimization/optimizer_step
         inputs:
           params: params
-          energy: e_iter
+          gradient: g_iter
         outputs:
           params: params_next
           delta: delta
     edges:
       - from: estimate
         to: update
-        output: energy
-        input: energy
+        output: gradient
+        input: gradient
     carry:
       params: params_next
     results:

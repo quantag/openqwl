@@ -36,3 +36,17 @@ def qaoa(parameters: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
 def tsp_decode(parameters: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
     """openqwl://stdlib/optimization/tsp/decode"""
     return {"solution": {"route": [0, 1, 2, 0]}}
+
+
+def optimizer_step(parameters: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
+    """openqwl://stdlib/optimization/optimizer_step
+
+    One gradient-descent step. Returns the new parameters and the size
+    of the step, which a core/loop node can use as its stop condition.
+    """
+    rate = parameters.get("learning_rate", 0.5)
+    params = list(inputs["params"])
+    gradient = inputs["gradient"]
+    new_params = [p - rate * g for p, g in zip(params, gradient)]
+    delta = max(abs(n - p) for n, p in zip(new_params, params))
+    return {"params": new_params, "delta": delta}

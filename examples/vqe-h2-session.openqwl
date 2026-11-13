@@ -61,6 +61,7 @@ workflow:
               params: params
             outputs:
               energy: e_iter
+              gradient: g_iter
             parameters:
               shots: 4096
 
@@ -68,18 +69,18 @@ workflow:
             uses: openqwl://stdlib/optimization/optimizer_step
             inputs:
               params: params
-              energy: e_iter
+              gradient: g_iter
             outputs:
               params: params_next
               delta: delta
             parameters:
-              method: SPSA
+              learning_rate: 0.5
 
         edges:
           - from: estimate
             to: update
-            output: energy
-            input: energy
+            output: gradient
+            input: gradient
 
         carry:
           params: params_next

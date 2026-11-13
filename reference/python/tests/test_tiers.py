@@ -180,6 +180,13 @@ class TestExamples(TierTestBase):
     def test_draft_01_examples_still_validate(self):
         load_workflow(os.path.join(EXAMPLES_DIR, "bell.openqwl"))
 
+    def test_session_example_runs_to_convergence(self):
+        doc = load_workflow(os.path.join(EXAMPLES_DIR, "vqe-h2-session.openqwl"))
+        result = run(doc)
+        self.assertLess(result.iterations["vqe_loop"], 200)
+        self.assertAlmostEqual(result.context["E"], -1.137, places=6)
+        self.assertAlmostEqual(result.context["theta"][0], 0.113, places=4)
+
     def test_kernel_nodes_need_a_quantum_runtime(self):
         doc = load_workflow(os.path.join(EXAMPLES_DIR, "teleportation-realtime.openqwl"))
         with self.assertRaises(ExecutionError) as ctx:
