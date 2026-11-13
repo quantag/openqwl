@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openqwl.org/schema/openqwl-0.1.schema.json",
-  "title": "OpenQWL 0.1",
-  "description": "Open Quantum Workflow Language",
+  "$id": "https://openqwl.org/schema/openqwl-0.2.schema.json",
+  "title": "OpenQWL 0.2",
+  "description": "Open Quantum Workflow Language. Accepts Draft 0.1 and Draft 0.2 documents.",
   "type": "object",
 
   "required": [
@@ -15,7 +15,7 @@
 
     "openqwl": {
       "type": "string",
-      "const": "0.1"
+      "enum": ["0.1", "0.2"]
     },
 
     "metadata": {
@@ -25,31 +25,12 @@
         "version"
       ],
       "properties": {
-
-        "id": {
-          "type": "string"
-        },
-
-        "name": {
-          "type": "string"
-        },
-
-        "version": {
-          "type": "string"
-        },
-
-        "author": {
-          "type": "string"
-        },
-
-        "description": {
-          "type": "string"
-        },
-
-        "license": {
-          "type": "string"
-        }
-
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "license": { "type": "string" }
       },
       "additionalProperties": true
     },
@@ -57,23 +38,10 @@
     "problem": {
       "type": "object",
       "properties": {
-
-        "domain": {
-          "type": "string"
-        },
-
-        "type": {
-          "type": "string"
-        },
-
-        "complexity": {
-          "type": "string"
-        },
-
-        "formal_model": {
-          "type": "string"
-        }
-
+        "domain": { "type": "string" },
+        "type": { "type": "string" },
+        "complexity": { "type": "string" },
+        "formal_model": { "type": "string" }
       },
       "additionalProperties": true
     },
@@ -84,101 +52,18 @@
     },
 
     "workflow": {
-
-      "type": "object",
-
-      "required": [
-        "nodes"
-      ],
-
-      "properties": {
-
-        "nodes": {
-
-          "type": "array",
-
-          "items": {
-
-            "type": "object",
-
-            "required": [
-              "id",
-              "uses"
-            ],
-
-            "properties": {
-
-              "id": {
-                "type": "string"
-              },
-
-              "uses": {
-                "type": "string"
-              },
-
-              "inputs": {
-                "type": "object"
-              },
-
-              "outputs": {
-                "type": "object"
-              },
-
-              "parameters": {
-                "type": "object"
-              }
-
-            },
-
-            "additionalProperties": true
-
-          }
-
-        },
-
-        "edges": {
-
-          "type": "array",
-
-          "items": {
-
-            "type": "object",
-
-            "required": [
-              "from",
-              "to"
-            ],
-
-            "properties": {
-
-              "from": {
-                "type": "string"
-              },
-
-              "to": {
-                "type": "string"
-              },
-
-              "output": {
-                "type": "string"
-              },
-
-              "input": {
-                "type": "string"
-              }
-
-            }
-
-          }
-
-        }
-
-      }
-
+      "$ref": "#/$defs/graph"
     },
 
     "execution": {
       "type": "object",
+      "properties": {
+        "tier": { "$ref": "#/$defs/tier" },
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/target" }
+        }
+      },
       "additionalProperties": true
     },
 
@@ -189,13 +74,138 @@
 
     "metrics": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": { "type": "string" }
     }
 
   },
 
-  "additionalProperties": false
+  "additionalProperties": false,
 
+  "$defs": {
+
+    "tier": {
+      "type": "string",
+      "enum": ["queued", "session", "realtime", "auto"]
+    },
+
+    "access": {
+      "type": "string",
+      "enum": ["qdmi", "qrmi", "native", "simulator", "auto"]
+    },
+
+    "target": {
+      "type": "object",
+      "required": ["id", "uses"],
+      "properties": {
+        "id": { "type": "string" },
+        "uses": { "type": "string" },
+        "access": {
+          "oneOf": [
+            { "$ref": "#/$defs/access" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/access" },
+              "minItems": 1
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "graph": {
+      "type": "object",
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/edge" }
+        }
+      }
+    },
+
+    "body": {
+      "type": "object",
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/edge" }
+        },
+        "carry": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "results": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "kernel": {
+      "type": "object",
+      "required": ["format"],
+      "properties": {
+        "format": { "type": "string" },
+        "source": { "type": "string" },
+        "inline": { "type": "string" }
+      },
+      "oneOf": [
+        { "required": ["source"], "not": { "required": ["inline"] } },
+        { "required": ["inline"], "not": { "required": ["source"] } }
+      ],
+      "additionalProperties": true
+    },
+
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "tier": { "$ref": "#/$defs/tier" },
+        "requires": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "target": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+
+    "node": {
+      "type": "object",
+      "required": ["id", "uses"],
+      "properties": {
+        "id": { "type": "string" },
+        "uses": { "type": "string" },
+        "inputs": { "type": "object" },
+        "outputs": { "type": "object" },
+        "parameters": { "type": "object" },
+        "constraints": { "$ref": "#/$defs/constraints" },
+        "kernel": { "$ref": "#/$defs/kernel" },
+        "body": { "$ref": "#/$defs/body" }
+      },
+      "additionalProperties": true
+    },
+
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "output": { "type": "string" },
+        "input": { "type": "string" }
+      }
+    }
+
+  }
 }

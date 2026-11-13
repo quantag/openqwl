@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenQWL Draft 0.1 validator.
+OpenQWL validator for Draft 0.1 and Draft 0.2 documents.
 
 Validates:
 - YAML syntax
@@ -10,6 +10,7 @@ Validates:
 - declared input/output references
 - DAG cycles
 - openqwl:// URI usage in node.uses
+- Draft 0.2 rules: composite nodes, kernels, execution tiers and targets
 """
 
 from __future__ import annotations
@@ -22,6 +23,8 @@ from typing import Any, Dict, List, Set
 
 import yaml
 from jsonschema import Draft202012Validator
+
+from openqwl.semantics import check_document
 
 
 class ValidationError(Exception):
@@ -189,6 +192,12 @@ def validate_openqwl(path: Path, schema_path: Path) -> None:
     validate_edges(edges, node_map)
     validate_dag(edges, set(node_map.keys()))
 
+    errors, warnings = check_document(data)
+    for warning in warnings:
+        print(f"WARNING: {path}: {warning}", file=sys.stderr)
+    if errors:
+        raise ValidationError("\n".join(f"{path}: {e}" for e in errors))
+
 
 def find_default_schema() -> Path:
     script_path = Path(__file__).resolve()
@@ -197,7 +206,7 @@ def find_default_schema() -> Path:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate OpenQWL Draft 0.1 documents.")
+    parser = argparse.ArgumentParser(description="Validate OpenQWL Draft 0.1 and 0.2 documents.")
     parser.add_argument("files", nargs="+", help="OpenQWL files to validate")
     parser.add_argument(
         "--schema",

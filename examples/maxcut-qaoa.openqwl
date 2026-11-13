@@ -49,17 +49,17 @@ workflow:
   edges:
     - from: qubo
       to: ising
-      output: Q
+      output: qubo
       input: qubo
 
     - from: ising
       to: qaoa
-      output: H
+      output: hamiltonian
       input: hamiltonian
 
     - from: qaoa
       to: execute
-      output: C
+      output: circuit
       input: circuit
 
 exports:

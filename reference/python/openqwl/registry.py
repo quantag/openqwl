@@ -34,6 +34,8 @@ REGISTRY: dict[str, NodeFn] = {
     "openqwl://stdlib/chemistry/electronic_structure": chemistry.electronic_structure,
     "openqwl://stdlib/chemistry/uccsd": chemistry.uccsd,
     "openqwl://stdlib/chemistry/vqe": chemistry.vqe,
+    "openqwl://stdlib/chemistry/estimate_energy": chemistry.estimate_energy,
+    "openqwl://stdlib/optimization/optimizer_step": optimization.optimizer_step,
     "openqwl://runtime/qiskit": runtime.qiskit,
 }
 

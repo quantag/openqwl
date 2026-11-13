@@ -33,7 +33,7 @@ workflow:
   edges:
     - from: create_qft
       to: export_qasm
-      output: qft_circuit
+      output: circuit
       input: circuit
 
 exports:

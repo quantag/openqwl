@@ -1,6 +1,6 @@
 # OpenQWL Node Specification
 
-Version: Draft 0.1
+Version: Draft 0.2
 
 A node represents exactly one computational operation.
 
@@ -29,6 +29,10 @@ metadata
 capabilities
 
 constraints
+
+kernel (Draft 0.2: a quantum program in OpenQASM or QIR, see SPEC.md section 16.8)
+
+body (Draft 0.2: composite nodes only, see SPEC.md section 14.1)
 
 ---
 

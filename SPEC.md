@@ -1,6 +1,6 @@
 # OpenQWL Specification
 
-Version: Draft 0.1  
+Version: Draft 0.2  
 Status: Draft  
 Copyright (c) 2026 Quantag IT Solutions GmbH  
 License: Apache License 2.0
@@ -78,7 +78,7 @@ exports:
 metrics:
 ```
 
-Only `openqwl`, `metadata`, and `workflow` are required in Draft 0.1.
+Only `openqwl`, `metadata`, and `workflow` are required in Draft 0.2.
 
 Other sections are optional but recommended for reproducible workflows.
 
@@ -94,11 +94,13 @@ Example:
 openqwl: "0.1"
 ```
 
-Draft 0.1 documents SHALL use:
+Draft 0.2 documents SHALL use:
 
 ```yaml
-openqwl: "0.1"
+openqwl: "0.2"
 ```
+
+Draft 0.2 is backward compatible with Draft 0.1. Every valid Draft 0.1 document remains valid. A document that uses any feature introduced in Draft 0.2 (composite nodes, kernels, execution tiers, targets) SHALL declare `openqwl: "0.2"`.
 
 Future versions SHOULD remain backward compatible when possible.
 
@@ -308,6 +310,106 @@ No implicit data connections exist.
 
 A compliant implementation SHALL reject workflows with cycles.
 
+Repetition is not expressed with cycles. It is expressed with a composite node (section 14.1) whose body is itself a DAG. Every graph in a document, at every level of nesting, is acyclic.
+
+## 14.1 Composite Nodes
+
+A composite node contains a nested workflow in its `body` field. Draft 0.2 defines two composite components in the reserved `openqwl://core/` namespace.
+
+| Component | Meaning |
+|---|---|
+| `openqwl://core/group` | Executes its body once. Used to give several nodes a common execution tier or target, for example one session. |
+| `openqwl://core/loop` | Executes its body repeatedly until a stop condition holds or an iteration limit is reached. |
+
+A `body` contains:
+
+```yaml
+body:
+  nodes:      # required, same rules as workflow.nodes
+  edges:      # optional, same rules as workflow.edges
+  results:    # required for core/loop, optional for core/group
+  carry:      # core/loop only
+```
+
+### Scoping
+
+- The composite node's `inputs` bind outer variables to port names. Inside the body these port names are readable as variables.
+- Body nodes MAY also read variables of the enclosing scope by name.
+- Variables produced inside the body are local to the body and are not visible outside it.
+- `results` maps each port listed in the composite node's `outputs` to a body variable. After the body completes, the value of that body variable is published to the outer variable named in `outputs`.
+- Node identifiers SHALL be unique within one body. A body node MAY reuse an identifier used outside the body.
+
+### Loop semantics
+
+A `core/loop` node SHALL declare `parameters.max_iterations`, a positive integer. It MAY declare `parameters.until`.
+
+```yaml
+parameters:
+  max_iterations: 200
+  until:
+    variable: delta      # a body variable
+    lt: 1.0e-6           # one of: lt, le, gt, ge, eq
+```
+
+Execution of a loop:
+
+1. Each loop variable (port in `inputs`) is initialised from the bound outer variable.
+2. The body is executed as a DAG.
+3. If `until` is present and its condition holds for the body variable, the loop stops.
+4. Otherwise, every entry in `carry` replaces the loop variable named by its key with the body variable named by its value, and the next iteration starts.
+5. The loop also stops after `max_iterations` iterations.
+6. When the loop stops, `results` are published from the last completed iteration.
+
+Every key in `carry` SHALL be a port declared in the loop node's `inputs`.
+
+Example:
+
+```yaml
+- id: vqe_loop
+  uses: openqwl://core/loop
+  inputs:
+    params: theta0
+  outputs:
+    energy: E
+    params: theta
+  parameters:
+    max_iterations: 200
+    until:
+      variable: delta
+      lt: 1.0e-6
+  constraints:
+    tier: session
+  body:
+    nodes:
+      - id: estimate
+        uses: openqwl://stdlib/chemistry/estimate_energy
+        inputs:
+          hamiltonian: H
+          ansatz: A
+          params: params
+        outputs:
+          energy: e_iter
+          gradient: g_iter
+      - id: update
+        uses: openqwl://stdlib/optimization/optimizer_step
+        inputs:
+          params: params
+          gradient: g_iter
+        outputs:
+          params: params_next
+          delta: delta
+    edges:
+      - from: estimate
+        to: update
+        output: gradient
+        input: gradient
+    carry:
+      params: params_next
+    results:
+      energy: e_iter
+      params: params_next
+```
+
 ---
 
 # 15. Node
@@ -330,6 +432,8 @@ parameters:
 metadata:
 capabilities:
 constraints:
+kernel:      # Draft 0.2, see section 16.8
+body:        # Draft 0.2, composite nodes only, see section 14.1
 ```
 
 Example:
@@ -433,6 +537,46 @@ constraints:
   minimum_qubits: 4
   supports_shots: true
 ```
+
+Draft 0.2 defines three constraint keys with fixed meaning:
+
+| Key | Values | Meaning |
+|---|---|---|
+| `tier` | `queued`, `session`, `realtime`, `auto` | Required execution tier of the node (section 20.1). Default `auto`. |
+| `requires` | list of capability names | Capabilities the selected backend SHALL provide (section 20.2). |
+| `target` | target identifier | Pins the node to a target declared in `execution.targets` (section 20.3). |
+
+A constraint on a composite node applies to its whole body. A body node SHALL NOT declare a `target` different from the target of its enclosing composite node. Inside a composite node with `tier: session`, a body node SHALL NOT declare `tier: queued`; it MAY declare `tier: realtime` for a kernel that runs within the session.
+
+## 16.8 kernel
+
+The `kernel` field attaches a quantum program to a node. A kernel is the unit that runs on a quantum device, including any real-time classical logic such as branching on mid-circuit measurements.
+
+OpenQWL does not define kernel syntax. Kernels are written in an existing kernel language and referenced or embedded.
+
+```yaml
+kernel:
+  format: openqasm3          # openqasm2 | openqasm3 | qir-base | qir-adaptive | vendor URI
+  source: kernels/teleport.qasm
+```
+
+or
+
+```yaml
+kernel:
+  format: openqasm3
+  inline: |
+    OPENQASM 3.0;
+    ...
+```
+
+Exactly one of `source` and `inline` SHALL be present. `source` is a relative path or a URI.
+
+A node whose only purpose is to execute a kernel SHALL use `uses: openqwl://core/kernel`. Other components MAY also accept a `kernel` field.
+
+## 16.9 body
+
+The `body` field is defined only for composite nodes. See section 14.1.
 
 ---
 
@@ -562,6 +706,74 @@ execution:
 
 Execution engines MAY ignore unsupported parameters, but SHOULD report warnings.
 
+Draft 0.2 adds the keys `tier` and `targets` to the `execution` section.
+
+```yaml
+execution:
+  tier: auto                 # default for every node; queued | session | realtime | auto
+  targets:
+    - id: qpu_a
+      uses: openqwl://hardware/site_a/qpu_1
+      access: [qrmi, qdmi]   # qdmi | qrmi | native | simulator | auto, or a composition
+    - id: local
+      uses: openqwl://hardware/local/simulator
+      access: simulator
+```
+
+## 20.1 Execution Tiers
+
+The tier states how quickly classical code must respond to quantum results. It does not rank the quality of a method.
+
+| Tier | Response time | Where classical code runs | Typical use |
+|---|---|---|---|
+| `queued` | minutes to hours | anywhere | single circuits, batches, sweeps |
+| `session` | milliseconds to seconds per iteration | next to the QPU, within one reservation of the device | variational loops |
+| `realtime` | within the coherence time | on the control system of the device | feed-forward on mid-circuit measurements |
+| `auto` | | chosen by the implementation | default |
+
+Rules:
+
+1. `realtime` SHALL only be declared on a node that carries a `kernel`. Real-time logic is part of the kernel and is never expressed as workflow nodes or edges.
+2. `session` on a composite node means that its whole body SHALL be executed within one reservation of the target device.
+3. With `auto`, an implementation chooses the tier. It SHOULD choose `realtime` for kernels that branch on mid-circuit measurements, and SHOULD consider `session` for a `core/loop` whose body contains a quantum node, taking latency, queue behaviour and cost into account.
+4. A node's `constraints.tier` overrides `execution.tier`.
+
+Fallback:
+
+- If `session` is requested and the target offers no sessions, an implementation MAY execute the body as `queued` jobs and SHALL report a warning. It SHALL preserve the workflow semantics. Results on physical hardware MAY differ, because the device can change between jobs.
+- If `realtime` is requested and the target cannot execute the kernel in real time, an implementation SHALL report an error and SHALL NOT fall back.
+
+## 20.2 Capability Names
+
+The following names are defined for `constraints.requires`:
+
+| Name | Meaning |
+|---|---|
+| `mid_circuit_measurement` | Measurement of a qubit before the end of the kernel. |
+| `feed_forward` | Later operations depend on earlier measurement results within one kernel execution. |
+| `qubit_reuse` | A measured qubit can be reset and used again. |
+| `sessions` | The device can be reserved for a sequence of jobs. |
+
+Implementations MAY accept additional names. Unknown names SHALL cause a warning, not an error.
+
+## 20.3 Targets
+
+`execution.targets` lists the resources a workflow may run on. Each target SHALL have an `id` and a `uses` URI (section 23.3). The optional `access` field selects how the device is reached:
+
+| Value | Meaning |
+|---|---|
+| `qdmi` | Through the Quantum Device Management Interface. |
+| `qrmi` | Through the Quantum Resource Management Interface. |
+| `native` | Through the provider's own SDK or API. |
+| `simulator` | A local or emulated simulator. |
+| `auto` | Chosen by the implementation. Default. |
+
+A list such as `[qrmi, qdmi]` composes two paths: the first acquires the resource and the second operates the device.
+
+A node is pinned to a target with `constraints.target`. Without it, the implementation selects a target that satisfies the node's tier and `requires`.
+
+Access selection does not change the meaning of a workflow. A document SHALL produce the same logical results on any target that satisfies its constraints.
+
 ---
 
 # 21. Exports
@@ -622,6 +834,10 @@ All globally identifiable OpenQWL resources SHOULD use this namespace.
 The namespace is reserved by the OpenQWL specification.
 
 ---
+
+## 23.0 Core
+
+The `openqwl://core/` namespace is reserved for components defined by this specification: `core/group`, `core/loop` and `core/kernel`. Other components SHALL NOT be published in this namespace.
 
 ## 23.1 Standard Library
 
@@ -797,6 +1013,14 @@ An OpenQWL document is valid when:
 - all referenced outputs exist
 - all referenced inputs exist
 - the workflow graph contains no cycles
+- every composite body satisfies the same rules, recursively
+- every `core/loop` node declares a positive `max_iterations`
+- every `carry` key is a port declared in the loop node's `inputs`
+- every `results` key is a port declared in the composite node's `outputs`
+- every node that declares `tier: realtime` carries a `kernel`
+- every `kernel` has a `format` and exactly one of `source` and `inline`
+- every `constraints.target` references a declared target
+- no body node contradicts the `tier` or `target` of its enclosing composite node
 - the document conforms to the published schema
 
 A validator SHOULD produce actionable error messages.
@@ -816,7 +1040,7 @@ Reason:
 
 # 27. Compliance
 
-An implementation is OpenQWL Draft 0.1 compliant if it:
+An implementation is OpenQWL Draft 0.2 compliant if it:
 
 - parses valid OpenQWL documents
 - validates required structure
@@ -824,6 +1048,9 @@ An implementation is OpenQWL Draft 0.1 compliant if it:
 - reports validation errors
 - supports the `.openqwl` file extension
 - accepts UTF-8 YAML 1.2 input
+- validates composite nodes, kernels, tiers and targets as defined in sections 14.1, 16.7, 16.8 and 20
+
+An implementation MAY reject tiers or targets it cannot execute, but SHALL report which constraint it cannot satisfy.
 
 Additional capabilities MAY be implemented.
 
@@ -950,9 +1177,8 @@ Future versions may define:
 - package manager
 - remote registry
 - variables
-- conditionals
-- loops
-- distributed execution
+- conditionals at workflow level (conditionals on measurement results are expressed inside kernels)
+- distributed execution across linked devices (links between targets)
 - workflow optimization
 - execution provenance
 - experiment databases

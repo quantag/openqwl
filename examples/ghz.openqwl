@@ -34,7 +34,7 @@ workflow:
   edges:
     - from: create_ghz
       to: export_qasm
-      output: ghz_circuit
+      output: circuit
       input: circuit
 
 exports:
